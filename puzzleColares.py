@@ -259,22 +259,53 @@ class PuzzleColares(Problem):
         state. The result would typically be a list, but if there are
         many actions, consider yielding them one at a time in an
         iterator, rather than building them all at once."""
-        return [('rotate', i, +1) for i in range(len(state.getNecklaces()))] + \
-               [('rotate', i, -1) for i in range(len(state.getNecklaces()))]
+        return [{'name':'rotate', 'target':i, 'direction':+1, 'cost':1} for i in range(len(state.getNecklaces()))] + \
+               [{'name':'rotate', 'target':i, 'direction':-1, 'cost':1} for i in range(len(state.getNecklaces()))] + \
+               [{'name':'rotate', 'target':i, 'direction':-2, 'cost':1.8} for i in range(len(state.getNecklaces()))] + \
+               [{'name':'rotate', 'target':i, 'direction':+2, 'cost':1.8} for i in range(len(state.getNecklaces()))] + \
+               [{'name':'rotate', 'target':i, 'direction':-3, 'cost':1.5} for i in range(len(state.getNecklaces()))] + \
+               [{'name':'rotate', 'target':i, 'direction':+3, 'cost':1.5} for i in range(len(state.getNecklaces()))]
 
-    
+
     def result(self, state, action):
         """Return the state that results from executing the given
         action in the given state. The action must be one of
         self.actions(state)."""
-        dimension = len(state.getNecklaces())
-        numBeads = state.getNecklaces()[0].getNumBeads()
         newState = IntersectedNecklacesState(dimension=len(state.getNecklaces()), \
                         numBeads=state.getNecklaces()[0].getNumBeads(), \
                         initConf=state.listifyed())
         newState.rotateColours(iNecklace=action[1], direction=action[2])
         return newState
-                                             
+    
+    
+    def path_cost(self, c, state1, action, state2):
+        """Return the cost of a solution path that arrives at state2 from
+        state1 via action, assuming cost c to get up to state1. If the problem
+        is such that the path doesn't matter, this function will only look at
+        state2.  If the path does matter, it will consider c and maybe state1
+        and action. The default method costs 1 for every step in the path."""
+        return c + action['cost']
+
+
+    def goal_test(self, state):
+        """Return True if the state is a goal. The default method compares the
+        state to self.goal or checks for state in self.goal if it is a
+        list, as specified in the constructor. Override this method if
+        checking against a single self.goal is not enough.
+        
+        Goal is attained when each necklace has two colours condensed 
+        in full sequences (complete set)."""
+        for necklace in state.getNecklaces():
+            pass
+        
+
+
+    def display(self, state):
+        """ Display state """
+        print(state)
+
+
+
 if __name__ == "__main__":
     random.seed(1234567)
     
@@ -327,6 +358,6 @@ if __name__ == "__main__":
     print("Initial state:")
     print(instate)
     puzzle = PuzzleColares(instate)
-    print(puzzle.actions(instate))
+    #print(puzzle.actions(instate))
     
     
