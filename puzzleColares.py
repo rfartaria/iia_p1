@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import random
-from searchPlus import Problem, breadth_first_tree_search
+from searchPlus import *
 
 class Bead(object):
     
@@ -78,7 +78,7 @@ class Necklace(object):
             self._beads.remove(k)
             self.numBeads -= 1
             return
-        raise "k is neither [int] or [Bead]!"
+        raise Exception("k is neither [int] or [Bead]!")
 
 
     def appendBead(self, bead):
@@ -143,15 +143,30 @@ class IntersectedNecklacesState(object):
         
         if initConf != None:
             
-            # TODO: validate initConf as specified in project statement
+            # test initConf
+            if len(initConf) != self._dimension:
+                raise Exception("Initial configuration dimension different from puzzle dimension")
+            for l in initConf:
+                if len(l) != self._numBeads:
+                    raise Exception("Wrong number of beads at "+str(l))
             
+            # apply initConf
             for i in range(self._dimension):
                 clist = initConf[i]
                 necklace = self._necklaces[i]
                 for j in range(self._numBeads):
                     necklace.getBead(j).setColour(clist[j])
-    
-    
+            
+            # further tests on initConf
+            cdist = self.getColourDistribution()
+            if (len(cdist) != 2*self._dimension):
+                raise Exception("Wrong number of colours: "+str(cdist))
+            if (len([c for c in cdist.values() if c == int(self._numBeads/2)]) != 2):
+                raise Exception("Wrong colour distribution: "+str(cdist))
+            if (len([c for c in cdist.values() if c == int(self._numBeads/2)-1]) != 2*self._dimension-2):
+                raise Exception("Wrong colour distribution: "+str(cdist))
+
+
     def _generateRandomConfiguration(self):
             # generate independent necklaces
             self._necklaces = [Necklace(colourBeadsDist={1:self._numBeads}) for i in range(self._dimension)]
@@ -238,21 +253,21 @@ class IntersectedNecklacesState(object):
             ncdist = necklace.getBeadColourDistribution()
             completeColours = [c for c in ncdist.keys() if scdist[c] == ncdist[c]]
             for c in completeColours:
-               ic = nbColours.index(c)
-               ccount = 1
-               niter = 0
-               iup = ic
-               idown = ic
-               while (nbColours[iup] == c or nbColours[idown] == c):
-                   niter += 1
-                   iup = (ic + niter) % len(nbColours)
-                   idown = (ic - niter) % len(nbColours)
-                   if nbColours[iup] == c:
-                       ccount += 1
-                   if nbColours[idown] == c:
-                       ccount += 1
-               if ccount != scdist[c]:
-                   return False
+                ic = nbColours.index(c)
+                ccount = 1
+                niter = 0
+                iup = ic
+                idown = ic
+                while (nbColours[iup] == c or nbColours[idown] == c):
+                    niter += 1
+                    iup = (ic + niter) % len(nbColours)
+                    idown = (ic - niter) % len(nbColours)
+                    if nbColours[iup] == c:
+                        ccount += 1
+                    if nbColours[idown] == c:
+                        ccount += 1
+                if ccount != scdist[c]:
+                    return False
         # all have two complete colours in full sequence
         return True
 
@@ -357,13 +372,16 @@ class PuzzleColares(Problem):
         print(state)
 
 
-    def exec(self, state, accoes):
-        cost = 0
-        for a in actions:
-            nex = self.result(state, a)
-            cost = self.path_cost(cost, state, a, nex)
-            state = nex
-        return (state, cost)
+def exec(p,estado,accoes):
+    """ Executa uma sequência de acções a partir do estado
+        devolve um par (estado, custo) depois de imprimir
+    """
+    custo = 0
+    for a in accoes:
+        seg = p.result(estado,a)
+        custo = p.path_cost(custo,estado,a,seg)
+        estado = seg
+    return (estado,custo)
 
 
 
@@ -408,7 +426,30 @@ if __name__ == "__main__":
     instate1.rotateColours(0,-1)
     print(instate1)
     print("is the same as it started = "+str(instate0 == instate1))
-    
+    print()
+    print("Wrong number of necklaces:")
+    initcl = [[2,1,1,1,1,1,1,1,1,1,3,2,2,2,2,2,2,2,2,2]]
+    try:
+        state = IntersectedNecklacesState(dimension=2, numBeads=20, initConf=initcl)
+    except Exception as e:
+        print(e)
+    print()
+    print("Wrong number of beads:")
+    initcl = [[2,1,1,1,1,1,1,1,1,1,3,2,2,2,2,2,2,2,2,2],
+                 [2,5,5,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4]]
+    try:
+        state = IntersectedNecklacesState(dimension=2, numBeads=20, initConf=initcl)
+    except Exception as e:
+        print(e)
+    print()
+    print("Wrong colour distribution:")
+    initcl = [[2,1,1,1,1,1,1,1,1,1,3,2,2,2,2,2,2,2,2,2],
+                 [2,5,5,5,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4]]
+    try:
+        state = IntersectedNecklacesState(dimension=2, numBeads=20, initConf=initcl)
+    except Exception as e:
+        print(e)
+        
     print()
     print("Four rings with 32 beads each:")
     instate = IntersectedNecklacesState(dimension=4, numBeads=32)
@@ -438,7 +479,7 @@ if __name__ == "__main__":
     for action in actions:
         print(action)
     
-    result = puzzle.exec(puzzle.initial, actions)
+    result = exec(puzzle, puzzle.initial, actions)
     print("Final state:")
     print(result[0])
     print ("cost = "+str(result[1]))
