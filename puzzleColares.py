@@ -129,6 +129,9 @@ class IntersectedNecklacesState(object):
         self._generateRandomConfiguration()
         
         if initConf != None:
+            
+            # TODO: validate initConf as specified in project statement
+            
             for i in range(self._dimension):
                 clist = initConf[i]
                 necklace = self._necklaces[i]
@@ -251,7 +254,27 @@ class PuzzleColares(Problem):
         super().__init__(initial, goal)
 
 
+    def actions(self, state):
+        """Return the actions that can be executed in the given
+        state. The result would typically be a list, but if there are
+        many actions, consider yielding them one at a time in an
+        iterator, rather than building them all at once."""
+        return [('rotate', i, +1) for i in range(len(state.getNecklaces()))] + \
+               [('rotate', i, -1) for i in range(len(state.getNecklaces()))]
 
+    
+    def result(self, state, action):
+        """Return the state that results from executing the given
+        action in the given state. The action must be one of
+        self.actions(state)."""
+        dimension = len(state.getNecklaces())
+        numBeads = state.getNecklaces()[0].getNumBeads()
+        newState = IntersectedNecklacesState(dimension=len(state.getNecklaces()), \
+                        numBeads=state.getNecklaces()[0].getNumBeads(), \
+                        initConf=state.listifyed())
+        newState.rotateColours(iNecklace=action[1], direction=action[2])
+        return newState
+                                             
 if __name__ == "__main__":
     random.seed(1234567)
     
@@ -296,4 +319,14 @@ if __name__ == "__main__":
     print()
     instate = IntersectedNecklacesState(dimension=4, numBeads=32)
     print(instate)
+    
+    print()
+    print("********* PUZZLE TESTS ***********")
+    print()
+    instate = IntersectedNecklacesState(dimension=2, numBeads=20)
+    print("Initial state:")
+    print(instate)
+    puzzle = PuzzleColares(instate)
+    print(puzzle.actions(instate))
+    
     
