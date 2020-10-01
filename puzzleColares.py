@@ -106,9 +106,7 @@ class Necklace(object):
 class IntersectedNecklacesState(object):
     
     """ dimension: number of necklaces
-        numBeads: number of beads in each necklace. Must be even number
-        intersection: how many beads are in the arch resulting from the intersection.
-            Has to be an odd integer smaller than numBeads/2-3
+        numBeads: number of beads in each necklace. Must be divisible by 4
         initConf: list of lists of integers (colour codes) according to following rules
                 1. each sub-list represents a necklace
                 2. necklaces have common bead colours (shared beads) as follows:
@@ -121,11 +119,11 @@ class IntersectedNecklacesState(object):
                  [<2>,3,3,3,<3>,3,3,3,3,3,,3,4,4,4,4,4,4,4,4,4]]
                 shared beads are signaled for convenience """
                 
-    def __init__(self, dimension=2, numBeads=20, intersection=3, initConf=None):
+    def __init__(self, dimension=2, numBeads=20, initConf=None):
 
         self._dimension = dimension
         self._numBeads = numBeads
-        self._intersection = intersection
+        self._intersection = int(numBeads/4) - 2
             
         if initConf != None:
                 raise NotImplementedError
@@ -243,11 +241,14 @@ if __name__ == "__main__":
     print(necklace2)
     
     print()
-    instate = IntersectedNecklacesState(dimension=2, numBeads=20, intersection=3)
+    instate = IntersectedNecklacesState(dimension=2, numBeads=20)
     print(instate)
     instate.rotateColours(0,1)
     print(instate)
     instate.rotateColours(1,-1)
     print(instate)
     
+    print()
+    instate = IntersectedNecklacesState(dimension=2, numBeads=24)
+    print(instate)
     
