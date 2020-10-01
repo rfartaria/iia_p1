@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import random
-from searchPlus import Problem
+from searchPlus import Problem, breadth_first_tree_search
 
 class Bead(object):
     
@@ -321,11 +321,7 @@ class PuzzleColares(Problem):
         many actions, consider yielding them one at a time in an
         iterator, rather than building them all at once."""
         return [{'name':'rotate', 'target':i, 'direction':+1, 'cost':1} for i in range(len(state.getNecklaces()))] + \
-               [{'name':'rotate', 'target':i, 'direction':-1, 'cost':1} for i in range(len(state.getNecklaces()))] + \
-               [{'name':'rotate', 'target':i, 'direction':-2, 'cost':1.8} for i in range(len(state.getNecklaces()))] + \
-               [{'name':'rotate', 'target':i, 'direction':+2, 'cost':1.8} for i in range(len(state.getNecklaces()))] + \
-               [{'name':'rotate', 'target':i, 'direction':-3, 'cost':1.5} for i in range(len(state.getNecklaces()))] + \
-               [{'name':'rotate', 'target':i, 'direction':+3, 'cost':1.5} for i in range(len(state.getNecklaces()))]
+               [{'name':'rotate', 'target':i, 'direction':-1, 'cost':1} for i in range(len(state.getNecklaces()))]
 
 
     def result(self, state, action):
@@ -335,7 +331,7 @@ class PuzzleColares(Problem):
         newState = IntersectedNecklacesState(dimension=len(state.getNecklaces()), \
                         numBeads=state.getNecklaces()[0].getNumBeads(), \
                         initConf=state.listifyed())
-        newState.rotateColours(iNecklace=action[1], direction=action[2])
+        newState.rotateColours(iNecklace=action['target'], direction=action['direction'])
         return newState
     
     
@@ -359,6 +355,15 @@ class PuzzleColares(Problem):
     def display(self, state):
         """ Display state """
         print(state)
+
+
+    def exec(self, state, accoes):
+        cost = 0
+        for a in actions:
+            nex = self.result(state, a)
+            cost = self.path_cost(cost, state, a, nex)
+            state = nex
+        return (state, cost)
 
 
 
@@ -426,4 +431,33 @@ if __name__ == "__main__":
     print(instate)
     puzzle = PuzzleColares(instate)
     print("Is goal state: "+ str(puzzle.goal_test(instate)))
+    
+    print()
+    actions = [random.choice(puzzle.actions(instate)) for i in range(5)]
+    print("Actions:")
+    for action in actions:
+        print(action)
+    
+    result = puzzle.exec(puzzle.initial, actions)
+    print("Final state:")
+    print(result[0])
+    print ("cost = "+str(result[1]))
+    
+    print()
+    initStateList = result[0].listifyed()
+    instate = IntersectedNecklacesState(dimension=2, numBeads=20, initConf=initStateList)
+    puzzle = PuzzleColares(instate)
+    print("Initial state:")
+    print(puzzle.initial)
+    print()
+    print("Performing breadth-first search...")
+    print()
+    resultNode = breadth_first_tree_search(puzzle)
+    print("Final state:")
+    print(resultNode.state)
+    print("Actions performed:")
+    for a in resultNode.solution():
+        print(a)
+    print ("cost = "+str(resultNode.path_cost))
+    
     
