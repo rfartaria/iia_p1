@@ -167,7 +167,6 @@ class IntersectedNecklacesState(object):
                 b = beads.pop()
                 b.setColour(c)
 
-
     
     def rotateColours(self, iNecklace, direction):
         self._necklaces[iNecklace].rotateColours(direction)
@@ -219,6 +218,8 @@ class IntersectedNecklacesState(object):
                     raise IndexError
         return "\n".join(["".join(line) for line in scr])
 
+
+
 if __name__ == "__main__":
     random.seed(1234567)
     
@@ -243,12 +244,14 @@ if __name__ == "__main__":
     print()
     instate = IntersectedNecklacesState(dimension=2, numBeads=20)
     print(instate)
+    print("rodar 0, +1")
     instate.rotateColours(0,1)
     print(instate)
+    print("rodar 1, -1")
     instate.rotateColours(1,-1)
     print(instate)
     
-    print()
-    instate = IntersectedNecklacesState(dimension=2, numBeads=24)
-    print(instate)
+    # print()
+    # instate = intersectednecklacesstate(dimension=2, numbeads=24)
+    # print(instate)
     
