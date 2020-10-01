@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import random
+from searchPlus import Problem
 
 class Bead(object):
     
@@ -14,7 +15,7 @@ class Bead(object):
         self._colour = colour
 
     def __str__(self):
-        return "\u001b[38;5;"+str(self._colour)+"mO\u001b[38;5;m"
+        return "\u001b[38;5;"+str(self._colour)+"mO\u001b[0m"
 
 
 
@@ -125,11 +126,15 @@ class IntersectedNecklacesState(object):
         self._numBeads = numBeads
         self._intersection = int(numBeads/4) - 2
             
-        if initConf != None:
-                raise NotImplementedError
-        
         self._generateRandomConfiguration()
-
+        
+        if initConf != None:
+            for i in range(self._dimension):
+                clist = initConf[i]
+                necklace = self._necklaces[i]
+                for j in range(self._numBeads):
+                    necklace.getBead(j).setColour(clist[j])
+    
     
     def _generateRandomConfiguration(self):
             # generate independent necklaces
@@ -167,7 +172,11 @@ class IntersectedNecklacesState(object):
                 b = beads.pop()
                 b.setColour(c)
 
-    
+
+    def getNecklaces(self):
+        return self._necklaces
+
+
     def rotateColours(self, iNecklace, direction):
         self._necklaces[iNecklace].rotateColours(direction)
 
@@ -210,13 +219,36 @@ class IntersectedNecklacesState(object):
                 else:
                     l = 0
                     c = i * scrLength + length - (j - (height+length+height)) + 1
-                try:
-                    scr[l][c] = str(bead)
-                except IndexError:
-                    print("i:"+str(i)+" j:"+str(j))
-                    print("l:"+str(l)+" c:"+str(c))
-                    raise IndexError
+                scr[l][c] = str(bead)
         return "\n".join(["".join(line) for line in scr])
+    
+    
+    """ Only compares colour values, not the bead objetcs themselves"""
+    def __eq__(self, o):
+        selfOrderedBeads = []
+        for necklace in self._necklaces:
+            for b in necklace.getBeads():
+                if b not in selfOrderedBeads:
+                    selfOrderedBeads.append(b)
+        oOrderedBeads = []
+        for necklace in o.getNecklaces():
+            for b in necklace.getBeads():
+                if b not in oOrderedBeads:
+                    oOrderedBeads.append(b)
+        selfOrderedColours = [b.getColour() for b in selfOrderedBeads]
+        oOrderedColours = [b.getColour() for b in oOrderedBeads]
+        return tuple(selfOrderedColours) == tuple(oOrderedColours)
+
+
+    def listifyed(self):
+        return [[b.getColour() for b in necklace.getBeads()] for necklace in self._necklaces]
+
+
+
+class PuzzleColares(Problem):
+    
+    def __init__(self, initial, goal=None):
+        super().__init__(initial, goal)
 
 
 
@@ -242,14 +274,24 @@ if __name__ == "__main__":
     print(necklace2)
     
     print()
-    instate = IntersectedNecklacesState(dimension=2, numBeads=20)
-    print(instate)
-    print("rodar 0, +1")
-    instate.rotateColours(0,1)
-    print(instate)
-    print("rodar 1, -1")
-    instate.rotateColours(1,-1)
-    print(instate)
+    instate0 = IntersectedNecklacesState(dimension=2, numBeads=20)
+    print("state listifyed = "+str(instate0.listifyed()))
+    instate1 = IntersectedNecklacesState(dimension=2, numBeads=20, initConf=instate0.listifyed())
+    print("instate0 == instate1: "+str(instate0 == instate1))
+    print(instate1)
+    print("rotate 0, +1")
+    instate1.rotateColours(0,1)
+    print(instate1)
+    print("rotate 1, -1")
+    instate1.rotateColours(1,-1)
+    print(instate1)
+    print("rotate 1, +1")
+    instate1.rotateColours(1,+1)
+    print(instate1)
+    print("rotate 0, -1")
+    instate1.rotateColours(0,-1)
+    print(instate1)
+    print("is the same as it started = "+str(instate0 == instate1))
     
     # print()
     # instate = intersectednecklacesstate(dimension=2, numbeads=24)
