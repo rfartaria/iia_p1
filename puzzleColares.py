@@ -293,7 +293,7 @@ if __name__ == "__main__":
     print(instate1)
     print("is the same as it started = "+str(instate0 == instate1))
     
-    # print()
-    # instate = intersectednecklacesstate(dimension=2, numbeads=24)
-    # print(instate)
+    print()
+    instate = IntersectedNecklacesState(dimension=4, numBeads=32)
+    print(instate)
     
