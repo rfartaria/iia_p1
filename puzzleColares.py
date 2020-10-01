@@ -56,6 +56,19 @@ class Necklace(object):
         return self._beads
 
 
+    def getBeadColours(self):
+        return [b.getColour() for b in self._beads]
+    
+    
+    def getBeadColourDistribution(self):
+        bcs = self.getBeadColours()
+        colourSet = set(bcs)
+        cdist =  {}
+        for c in colourSet:
+            cdist[c] = bcs.count(c)
+        return cdist
+
+
     def removeBead(self, k):
         if (isinstance(k, int)):
             self._beads.pop(k)
@@ -184,6 +197,66 @@ class IntersectedNecklacesState(object):
         self._necklaces[iNecklace].rotateColours(direction)
 
 
+    def getOrderedBeads(self):
+        orderedBeads = []
+        for necklace in self._necklaces:
+            for b in necklace.getBeads():
+                if b not in orderedBeads:
+                    orderedBeads.append(b)
+        return orderedBeads
+
+
+    def getOrderedBeadColours(self):
+        return [b.getColour() for b in self.getOrderedBeads()]
+
+
+    def getColourDistribution(self):
+        allBeadColours = self.getOrderedBeadColours()
+        colourSet = set(allBeadColours)
+        cdist = {}
+        for c in colourSet:
+            cdist[c] = allBeadColours.count(c)
+        return cdist
+
+
+    def i_am_a_goal_state(self):
+        """Goal is attained when each necklace has two colours condensed 
+        in full sequences (complete set)."""
+        # get colour distributions
+        scdist = self.getColourDistribution()
+        for necklace in self.getNecklaces():
+            ncdist = necklace.getBeadColourDistribution()
+            # must have at least two complete colours
+            completeColours = [c for c in ncdist.keys() if scdist[c] == ncdist[c]]
+            if len(completeColours) != 2:
+                return False
+                    
+        # all have two complete colours
+        # now lets test for full sequences
+        for necklace in self.getNecklaces():
+            nbColours = necklace.getBeadColours()
+            ncdist = necklace.getBeadColourDistribution()
+            completeColours = [c for c in ncdist.keys() if scdist[c] == ncdist[c]]
+            for c in completeColours:
+               ic = nbColours.index(c)
+               ccount = 1
+               niter = 0
+               iup = ic
+               idown = ic
+               while (nbColours[iup] == c or nbColours[idown] == c):
+                   niter += 1
+                   iup = (ic + niter) % len(nbColours)
+                   idown = (ic - niter) % len(nbColours)
+                   if nbColours[iup] == c:
+                       ccount += 1
+                   if nbColours[idown] == c:
+                       ccount += 1
+               if ccount != scdist[c]:
+                   return False
+        # all have two complete colours in full sequence
+        return True
+
+
     def __str__(self):
         height = self._intersection + 2
         length = int((self._numBeads - 2*height) / 2)
@@ -228,19 +301,7 @@ class IntersectedNecklacesState(object):
     
     """ Only compares colour values, not the bead objetcs themselves"""
     def __eq__(self, o):
-        selfOrderedBeads = []
-        for necklace in self._necklaces:
-            for b in necklace.getBeads():
-                if b not in selfOrderedBeads:
-                    selfOrderedBeads.append(b)
-        oOrderedBeads = []
-        for necklace in o.getNecklaces():
-            for b in necklace.getBeads():
-                if b not in oOrderedBeads:
-                    oOrderedBeads.append(b)
-        selfOrderedColours = [b.getColour() for b in selfOrderedBeads]
-        oOrderedColours = [b.getColour() for b in oOrderedBeads]
-        return tuple(selfOrderedColours) == tuple(oOrderedColours)
+        return tuple(self.getOrderedBeadColours()) == tuple(o.getOrderedBeadColours())
 
 
     def listifyed(self):
@@ -291,13 +352,8 @@ class PuzzleColares(Problem):
         """Return True if the state is a goal. The default method compares the
         state to self.goal or checks for state in self.goal if it is a
         list, as specified in the constructor. Override this method if
-        checking against a single self.goal is not enough.
-        
-        Goal is attained when each necklace has two colours condensed 
-        in full sequences (complete set)."""
-        for necklace in state.getNecklaces():
-            pass
-        
+        checking against a single self.goal is not enough."""
+        return state.i_am_a_goal_state()
 
 
     def display(self, state):
@@ -309,16 +365,15 @@ class PuzzleColares(Problem):
 if __name__ == "__main__":
     random.seed(1234567)
     
+    print()
+    print("********* NECKLACE TESTS ***********")
+    print()
     necklace = Necklace()
     print(necklace)
     necklace.rotateColours(-2)
     print(necklace)
     necklace.rotateColours(+2)
     print(necklace)
-    
-    # print("empty necklace:")
-    # necklace = Necklace(colourBeadsDist={})
-    # print(necklace)
     
     print()
     necklace1 = Necklace()
@@ -327,6 +382,8 @@ if __name__ == "__main__":
     print(necklace1)
     print(necklace2)
     
+    print()
+    print("********* STATE TESTS ***********")
     print()
     instate0 = IntersectedNecklacesState(dimension=2, numBeads=20)
     print("state listifyed = "+str(instate0.listifyed()))
@@ -348,6 +405,7 @@ if __name__ == "__main__":
     print("is the same as it started = "+str(instate0 == instate1))
     
     print()
+    print("Four rings with 32 beads each:")
     instate = IntersectedNecklacesState(dimension=4, numBeads=32)
     print(instate)
     
@@ -358,6 +416,14 @@ if __name__ == "__main__":
     print("Initial state:")
     print(instate)
     puzzle = PuzzleColares(instate)
-    #print(puzzle.actions(instate))
-    
+    print("Is goal state: "+ str(puzzle.goal_test(instate)))
+    print()
+    # using the one from project statement
+    goalState = [[2,1,1,1,1,1,1,1,1,1,3,2,2,2,2,2,2,2,2,2],
+                 [2,5,5,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4,4]]
+    instate = IntersectedNecklacesState(dimension=2, numBeads=20, initConf=goalState)
+    print("Initial state:")
+    print(instate)
+    puzzle = PuzzleColares(instate)
+    print("Is goal state: "+ str(puzzle.goal_test(instate)))
     
